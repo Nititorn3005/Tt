@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบงานซ่อมเครื่องซักผ้า & คลังอะไหล่ - บริษัท หาดใหญ่ซาวด์สตาร์ จำกัด</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#1d4ed8', // Royal Blue
+                            darkBlue: '#1e40af',
+                            orange: '#f97316', // Amber/Orange
+                            amber: '#f59e0b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        @media print {
+            body * { visibility: hidden; }
+            #print-section, #print-section * { visibility: visible; }
+            #print-section { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-full flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-gradient-to-r from-blue-900 via-blue-800 to-brand-orange text-white shadow-md no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white text-blue-900 p-2.5 rounded-xl shadow-lg flex items-center justify-center">
+                    <i class="fa-solid fa-screwdriver-wrench text-2xl text-brand-orange"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">บริษัท หาดใหญ่ซาวด์สตาร์ จำกัด</h1>
+                    <p class="text-xs text-blue-200">ระบบบริหารจัดการงานซ่อมเครื่องซักผ้าและคลังอะไหล่</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3 mt-2 sm:mt-0">
+                <button onclick="resetDataModal()" class="bg-white/10 hover:bg-white/20 text-xs px-3 py-2 rounded-lg border border-white/20 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-right"></i> รีเซ็ตข้อมูลเริ่มต้น
+                </button>
+                <div class="text-right text-xs hidden md:block">
+                    <div id="current-date" class="font-medium text-blue-100"></div>
+                    <div class="text-orange-300">โหมดออนไลน์ (Local Storage)</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="bg-white border-b border-slate-200 shadow-sm no-print">
+        <div class="max-w-7xl mx-auto px-4 flex space-x-1 sm:space-x-4 overflow-x-auto">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn py-3 px-4 font-semibold text-sm border-b-2 border-blue-700 text-blue-700 flex items-center gap-2 whitespace-nowrap transition">
+                <i class="fa-solid fa-chart-pie"></i> แดชบอร์ดสรุปผล
+            </button>
+            <button onclick="switchTab('jobs')" id="tab-jobs" class="tab-btn py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-600 hover:text-blue-700 flex items-center gap-2 whitespace-nowrap transition">
+                <i class="fa-solid fa-clipboard-list"></i> ระบบงานซ่อม
+            </button>
+            <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-600 hover:text-blue-700 flex items-center gap-2 whitespace-nowrap transition">
+                <i class="fa-solid fa-boxes-stacked"></i> คลังอะไหล่
+            </button>
+            <button onclick="switchTab('technicians')" id="tab-technicians" class="tab-btn py-3 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-600 hover:text-blue-700 flex items-center gap-2 whitespace-nowrap transition">
+                <i class="fa-solid fa-user-gear"></i> ทีมช่างผู้ปิดงาน
+            </button>
+        </div>
+    </nav>
+
+    <!-- App Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 overflow-y-auto">
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="view-dashboard" class="space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">ภาพรวมระบบ (Dashboard)</h2>
+                    <p class="text-sm text-slate-500">สรุปสถิติต่างๆ ของงานซ่อมและคลังอะไหล่ปัจจุบัน</p>
+                </div>
+                <button onclick="openJobModal()" class="bg-brand-orange hover:bg-orange-600 text-white px-4 py-2.5 rounded-xl font-medium shadow-md shadow-orange-500/20 flex items-center gap-2 transition text-sm">
+                    <i class="fa-solid fa-plus-circle"></i> บันทึกงานซ่อมใหม่
+                </button>
+            </div>
+
+            <!-- Metric Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">งานซ่อมทั้งหมด</p>
+                        <h3 id="stat-total-jobs" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">รอดำเนินการ</p>
+                        <h3 id="stat-pending-jobs" class="text-2xl font-bold text-amber-500 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">กำลังซ่อม/รออะไหล่</p>
+                        <h3 id="stat-repairing-jobs" class="text-2xl font-bold text-blue-600 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-gears"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">ซ่อมเสร็จสิ้น</p>
+                        <h3 id="stat-completed-jobs" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between sm:col-span-2 lg:col-span-1">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">อะไหล่ใกล้หมด</p>
+                        <h3 id="stat-low-stock" class="text-2xl font-bold text-rose-600 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secondary Analytics Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Recent Jobs Table Preview -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-brand-blue"></i> งานซ่อมล่าสุด
+                        </h3>
+                        <button onclick="switchTab('jobs')" class="text-sm text-blue-600 hover:underline font-medium">ดูทั้งหมด</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3 rounded-l-lg">เลขที่ใบงาน</th>
+                                    <th class="p-3">ลูกค้า / เครื่อง</th>
+                                    <th class="p-3">สถานะ</th>
+                                    <th class="p-3 rounded-r-lg">ช่างผู้รับผิดชอบ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-recent-jobs" class="divide-y divide-slate-100">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Technician Performance -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-medal text-brand-orange"></i> สรุปผลงานช่างผู้ปิดงาน
+                        </h3>
+                        <span class="text-xs bg-slate-100 px-2.5 py-1 rounded-lg text-slate-600 font-medium">งานซ่อมสำเร็จ</span>
+                    </div>
+                    <div class="space-y-4" id="dashboard-tech-stats">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: REPAIR JOBS -->
+        <section id="view-jobs" class="space-y-6 hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">ระบบจัดการงานซ่อม (Repair Jobs)</h2>
+                    <p class="text-sm text-slate-500">บันทึก ติดตามสถานะ เบิกอะไหล่ และออกใบเสร็จงานซ่อม</p>
+                </div>
+                <button onclick="openJobModal()" class="bg-brand-orange hover:bg-orange-600 text-white px-4 py-2.5 rounded-xl font-medium shadow-md shadow-orange-500/20 flex items-center gap-2 transition text-sm">
+                    <i class="fa-solid fa-plus-circle"></i> บันทึกงานซ่อมใหม่
+                </button>
+            </div>
+
+            <!-- Filters & Search Bar -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap gap-3 items-center justify-between">
+                <div class="flex flex-wrap gap-3 items-center flex-1">
+                    <div class="relative flex-1 min-w-[220px]">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" id="job-search" oninput="renderJobsTable()" placeholder="ค้นหาชื่อลูกค้า, เบอร์โทร, รุ่น, อาการเสีย..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                    </div>
+                    <select id="filter-status" onchange="renderJobsTable()" class="py-2 px-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600 bg-white">
+                        <option value="">สถานะทั้งหมด</option>
+                        <option value="รอดำเนินการ">รอดำเนินการ</option>
+                        <option value="กำลังตรวจเช็ค">กำลังตรวจเช็ค</option>
+                        <option value="รออะไหล่">รออะไหล่</option>
+                        <option value="ซ่อมเสร็จสิ้น">ซ่อมเสร็จสิ้น</option>
+                        <option value="ยกเลิก">ยกเลิก</option>
+                    </select>
+                    <select id="filter-technician" onchange="renderJobsTable()" class="py-2 px-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600 bg-white">
+                        <option value="">ช่างทั้งหมด</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Jobs Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 text-slate-600 uppercase text-xs font-semibold">
+                            <tr>
+                                <th class="p-4">เลขที่ / วันที่</th>
+                                <th class="p-4">ข้อมูลลูกค้า</th>
+                                <th class="p-4">เครื่องซักผ้า / อาการ</th>
+                                <th class="p-4">ช่างผู้รับผิดชอบ</th>
+                                <th class="p-4">ค่าบริการ/อะไหล่</th>
+                                <th class="p-4">สถานะ</th>
+                                <th class="p-4 text-right">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobs-table-body" class="divide-y divide-slate-100">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: SPARE PARTS INVENTORY -->
+        <section id="view-inventory" class="space-y-6 hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">คลังอะไหล่ (Spare Parts Inventory)</h2>
+                    <p class="text-sm text-slate-500">จัดการสต็อกอะไหล่เครื่องซักผ้า ราคา และจุดแจ้งเตือนใกล้หมด</p>
+                </div>
+                <button onclick="openPartModal()" class="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium shadow-md shadow-blue-500/20 flex items-center gap-2 transition text-sm">
+                    <i class="fa-solid fa-plus-circle"></i> เพิ่มอะไหล่ใหม่
+                </button>
+            </div>
+
+            <!-- Inventory Search & Filter -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap gap-3 items-center justify-between">
+                <div class="relative flex-1 min-w-[240px]">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="part-search" oninput="renderInventoryTable()" placeholder="ค้นหารหัสอะไหล่, ชื่ออะไหล่, หมวดหมู่..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm text-slate-600 flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" id="filter-low-stock" onchange="renderInventoryTable()" class="rounded text-blue-600 focus:ring-blue-500"> เฉพาะใกล้หมดสต็อก
+                    </label>
+                </div>
+            </div>
+
+            <!-- Inventory Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 text-slate-600 uppercase text-xs font-semibold">
+                            <tr>
+                                <th class="p-4">รหัส / หมวดหมู่</th>
+                                <th class="p-4">ชื่ออะไหล่</th>
+                                <th class="p-4">ราคาขาย (บาท)</th>
+                                <th class="p-4">ต้นทุน (บาท)</th>
+                                <th class="p-4 text-center">จำนวนคงเหลือ</th>
+                                <th class="p-4 text-right">ปรับสต็อก / จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body" class="divide-y divide-slate-100">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: TECHNICIANS -->
+        <section id="view-technicians" class="space-y-6 hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">ทีมช่างผู้รับผิดชอบงานซ่อม</h2>
+                    <p class="text-sm text-slate-500">รายชื่อช่างเทคนิคและสถิติงานซ่อมที่รับผิดชอบ</p>
+                </div>
+                <button onclick="openTechnicianModal()" class="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium shadow-md shadow-blue-500/20 flex items-center gap-2 transition text-sm">
+                    <i class="fa-solid fa-user-plus"></i> เพิ่มช่างใหม่
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="technicians-grid">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 no-print">
+        บริษัท หาดใหญ่ซาวด์สตาร์ จำกัด &copy; 2026 - ระบบงานซ่อมและคลังอะไหล่เครื่องซักผ้า (No-Login Direct Access)
+    </footer>
+
+    <!-- MODAL: ADD / EDIT JOB -->
+    <div id="job-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-900 to-blue-800 text-white flex justify-between items-center">
+                <h3 id="job-modal-title" class="font-bold text-lg"><i class="fa-solid fa-screwdriver-wrench"></i> บันทึกงานซ่อมใหม่</h3>
+                <button onclick="closeJobModal()" class="text-white/80 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4 flex-1">
+                <input type="hidden" id="edit-job-id">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อลูกค้า *</label>
+                        <input type="text" id="job-customer" placeholder="เช่น คุณสมชาย ใจดี" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">เบอร์โทรศัพท์ *</label>
+                        <input type="text" id="job-phone" placeholder="เช่น 081-234-5678" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">ที่อยู่ลูกค้า</label>
+                    <textarea id="job-address" rows="2" placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ..." class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ยี่ห้อ / รุ่นเครื่องซักผ้า *</label>
+                        <input type="text" id="job-model" placeholder="เช่น LG 12 Kg (WF-T1207)" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">สถานะงานซ่อม *</label>
+                        <select id="job-status" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600 bg-white">
+                            <option value="รอดำเนินการ">รอดำเนินการ</option>
+                            <option value="กำลังตรวจเช็ค">กำลังตรวจเช็ค</option>
+                            <option value="รออะไหล่">รออะไหล่</option>
+                            <option value="ซ่อมเสร็จสิ้น">ซ่อมเสร็จสิ้น</option>
+                            <option value="ยกเลิก">ยกเลิก</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ช่างผู้รับผิดชอบ / ปิดงาน *</label>
+                        <select id="job-technician" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600 bg-white">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">อาการเสียแจ้งซ่อม *</label>
+                    <textarea id="job-symptom" rows="2" placeholder="เช่น น้ำไม่เข้าถัง, ปั่นหมาดมีเสียงดัง..." class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600"></textarea>
+                </div>
+
+                <!-- Spare Parts Selection Section -->
+                <div class="border-t border-slate-200 pt-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">เบิกใช้อะไหล่จากคลัง</label>
+                        <button type="button" onclick="addPartRow()" class="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> เพิ่มรายการอะไหล่
+                        </button>
+                    </div>
+                    <div id="job-parts-container" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                        <!-- Dynamic Part Select Rows -->
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-200 pt-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ค่าบริการ (บาท)</label>
+                        <input type="number" id="job-labor-cost" value="300" oninput="calculateJobTotal()" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">รวมยอดสุทธิ (บาท) - คำนวณอัตโนมัติ</label>
+                        <div id="job-total-display" class="w-full p-2.5 rounded-xl bg-slate-100 border border-slate-200 text-sm font-bold text-blue-900 flex items-center">
+                            0.00 บาท
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">หมายเหตุ / ข้อมูลเพิ่มเติม (Remarks)</label>
+                    <textarea id="job-remarks" rows="2" placeholder="เช่น รับประกันงานซ่อม 3 เดือน, เปลี่ยนสายพานใหม่..." class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600"></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end space-x-3">
+                <button onclick="closeJobModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-200 transition">ยกเลิก</button>
+                <button onclick="saveJob()" class="px-5 py-2 rounded-xl text-sm font-medium bg-blue-700 hover:bg-blue-800 text-white shadow-md transition">บันทึกข้อมูล</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT SPARE PART -->
+    <div id="part-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-900 to-blue-800 text-white flex justify-between items-center">
+                <h3 id="part-modal-title" class="font-bold text-lg"><i class="fa-solid fa-box"></i> เพิ่มอะไหล่ใหม่</h3>
+                <button onclick="closePartModal()" class="text-white/80 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="edit-part-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">รหัสอะไหล่ (Part Code) *</label>
+                    <input type="text" id="part-code" placeholder="เช่น P-001" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">ชื่ออะไหล่ *</label>
+                    <input type="text" id="part-name" placeholder="เช่น สายพานเครื่องซักผ้า LG" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">หมวดหมู่</label>
+                        <input type="text" id="part-category" placeholder="เช่น สายพาน / มอเตอร์" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">จำนวนคงเหลือ *</label>
+                        <input type="number" id="part-stock" value="10" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ราคาขาย (บาท) *</label>
+                        <input type="number" id="part-price" value="250" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ต้นทุน (บาท)</label>
+                        <input type="number" id="part-cost" value="150" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">จุดแจ้งเตือนใกล้หมด (Min Stock)</label>
+                    <input type="number" id="part-min-stock" value="3" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end space-x-3">
+                <button onclick="closePartModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-200 transition">ยกเลิก</button>
+                <button onclick="savePart()" class="px-5 py-2 rounded-xl text-sm font-medium bg-blue-700 hover:bg-blue-800 text-white shadow-md transition">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD TECHNICIAN -->
+    <div id="technician-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-900 to-blue-800 text-white flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-user-plus"></i> เพิ่มช่างเทคนิคใหม่</h3>
+                <button onclick="closeTechnicianModal()" class="text-white/80 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อ-นามสกุล ช่าง *</label>
+                    <input type="text" id="tech-name" placeholder="เช่น ช่างวิชัย ใจสู้" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">เบอร์โทรศัพท์ *</label>
+                    <input type="text" id="tech-phone" placeholder="เช่น 089-876-5432" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">ความเชี่ยวชาญ / ตำแหน่ง</label>
+                    <input type="text" id="tech-specialty" placeholder="เช่น หัวหน้าช่างซ่อมเครื่องซักผ้าฝาหน้า" class="w-full p-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-600">
+                </div>
+            </div>
+            <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end space-x-3">
+                <button onclick="closeTechnicianModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-200 transition">ยกเลิก</button>
+                <button onclick="saveTechnician()" class="px-5 py-2 rounded-xl text-sm font-medium bg-blue-700 hover:bg-blue-800 text-white shadow-md transition">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINT / VIEW JOB SHEET MODAL -->
+    <div id="print-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[95vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-3 bg-slate-800 text-white flex justify-between items-center no-print">
+                <h3 class="font-bold text-md"><i class="fa-solid fa-print"></i> พิมพ์ใบส่งซ่อม / ใบเสร็จรับเงิน</h3>
+                <div class="flex items-center space-x-2">
+                    <button onclick="window.print()" class="bg-brand-orange hover:bg-orange-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-print"></i> สั่งพิมพ์เอกสาร
+                    </button>
+                    <button onclick="closePrintModal()" class="text-white/80 hover:text-white text-lg px-2"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div class="p-8 overflow-y-auto flex-1 bg-white" id="print-section">
+                <!-- Printable Receipt Template -->
+                <div class="border-2 border-slate-800 p-6 rounded-xl space-y-6">
+                    <!-- Company Header -->
+                    <div class="flex justify-between items-start border-b-2 border-slate-800 pb-4">
+                        <div>
+                            <h1 class="text-xl font-bold text-blue-900">บริษัท หาดใหญ่ซาวด์สตาร์ จำกัด (สำนักงานใหญ่)</h1>
+                            <p class="text-xs text-slate-600 mt-1">658, 658/1, 658/2, 658/3 ม.1 ถ.เลี่ยงเมือง (สายเอเชีย) ต.ควนลัง อ.หาดใหญ่ จ.สงขลา 90110</p>
+                            <p class="text-xs text-slate-600">เลขประจำตัวผู้เสียภาษี: 0905558005094 | โทร. 074-298900, 095-5641949</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="bg-blue-900 text-white px-4 py-1.5 rounded-lg font-bold text-sm inline-block mb-1">ใบส่งซ่อม / ใบเสร็จรับเงิน</div>
+                            <div id="print-job-no" class="text-xs font-bold text-slate-700">เลขที่: HSS-69001</div>
+                            <div id="print-date" class="text-xs text-slate-500">วันที่: 27 ต.ค. 2569</div>
+                        </div>
+                    </div>
+
+                    <!-- Customer & Job Details -->
+                    <div class="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <div>
+                            <p class="font-bold text-slate-700 mb-1">ข้อมูลลูกค้า:</p>
+                            <p><span class="font-medium">ชื่อ-นามสกุล:</span> <span id="print-customer"></span></p>
+                            <p><span class="font-medium">เบอร์โทรศัพท์:</span> <span id="print-phone"></span></p>
+                            <p><span class="font-medium">ที่อยู่:</span> <span id="print-address"></span></p>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-700 mb-1">ข้อมูลเครื่องซักผ้าและการซ่อม:</p>
+                            <p><span class="font-medium">ยี่ห้อ / รุ่น:</span> <span id="print-model"></span></p>
+                            <p><span class="font-medium">อาการเสีย:</span> <span id="print-symptom"></span></p>
+                            <p><span class="font-medium">ช่างผู้รับผิดชอบ:</span> <span id="print-technician"></span></p>
+                            <p><span class="font-medium">สถานะ:</span> <span id="print-status" class="font-bold text-blue-700"></span></p>
+                        </div>
+                    </div>
+
+                    <!-- Parts Used Table -->
+                    <div>
+                        <p class="text-xs font-bold text-slate-700 mb-2">รายการอะไหล่ที่เบิกใช้:</p>
+                        <table class="w-full text-xs text-left border-collapse border border-slate-300">
+                            <thead>
+                                <tr class="bg-slate-100">
+                                    <th class="border border-slate-300 p-2">ลำดับ</th>
+                                    <th class="border border-slate-300 p-2">รหัสอะไหล่ / รายการ</th>
+                                    <th class="border border-slate-300 p-2 text-center">จำนวน</th>
+                                    <th class="border border-slate-300 p-2 text-right">ราคาต่อหน่วย</th>
+                                    <th class="border border-slate-300 p-2 text-right">จำนวนเงิน (บาท)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="print-parts-table">
+                                <!-- Populated by JS -->
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="border border-slate-300 p-2 text-right font-medium">ค่าบริการช่าง:</td>
+                                    <td id="print-labor" class="border border-slate-300 p-2 text-right font-medium">0.00</td>
+                                </tr>
+                                <tr class="bg-slate-50 font-bold">
+                                    <td colspan="4" class="border border-slate-300 p-2 text-right text-blue-900">รวมยอดสุทธิทั้งสิ้น:</td>
+                                    <td id="print-grand-total" class="border border-slate-300 p-2 text-right text-blue-900">0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Remarks -->
+                    <div class="text-xs bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <span class="font-bold text-slate-700">หมายเหตุ / เงื่อนไขการรับประกัน:</span>
+                        <p id="print-remarks" class="text-slate-600 mt-1">-</p>
+                    </div>
+
+                    <!-- Signatures -->
+                    <div class="grid grid-cols-2 gap-8 pt-8 text-center text-xs">
+                        <div>
+                            <div class="border-b border-dotted border-slate-400 pb-8 mb-2"></div>
+                            <p class="font-medium text-slate-700">ลงชื่อ ....................................................... ลูกค้าผู้ส่งซ่อม</p>
+                            <p class="text-slate-500 mt-1">วันที่ ...../...../.....</p>
+                        </div>
+                        <div>
+                            <div class="border-b border-dotted border-slate-400 pb-8 mb-2"></div>
+                            <p class="font-medium text-slate-700">ลงชื่อ ....................................................... ผู้รับบริการ / ช่าง</p>
+                            <p class="text-slate-500 mt-1">บริษัท หาดใหญ่ซาวด์สตาร์ จำกัด</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Box -->
+    <div id="toast-box" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toast-message">บันทึกข้อมูลเรียบร้อยแล้ว</span>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Default Mock Data
+        const defaultTechnicians = [
+            { id: 'TECH-01', name: 'ช่างสมศักดิ์ รักงาน', phone: '081-111-2222', specialty: 'หัวหน้าช่างฝาหน้า-ฝาบน' },
+            { id: 'TECH-02', name: 'ช่างประเสริฐ ฝีมือดี', phone: '082-333-4444', specialty: 'ผู้เชี่ยวชาญระบบไฟฟ้า' },
+            { id: 'TECH-03', name: 'ช่างอนุชา ซ่อมไว', phone: '089-555-6666', specialty: 'ช่างสนามและติดตั้ง' }
+        ];
+
+        const defaultInventory = [
+            { id: 'P-001', code: 'P-001', name: 'สายพานเครื่องซักผ้า LG 12K', category: 'สายพาน', stock: 8, minStock: 3, price: 220, cost: 120 },
+            { id: 'P-002', code: 'P-002', name: 'วาล์วน้ำเข้า (Water Inlet Valve 2ทาง)', category: 'วาล์วน้ำ', stock: 2, minStock: 3, price: 350, cost: 180 },
+            { id: 'P-003', code: 'P-003', name: 'แผงวงจรควบคุม (Main Control Board)', category: 'แผงวงจร', stock: 4, minStock: 2, price: 1200, cost: 850 },
+            { id: 'P-004', code: 'P-004', name: 'มอเตอร์เดรนน้ำทิ้ง (Drain Motor)', category: 'มอเตอร์', stock: 1, minStock: 3, price: 450, cost: 250 },
+            { id: 'P-005', code: 'P-005', name: 'โช๊คอัพเครื่องซักผ้าฝาหน้า (Shock Absorber)', category: 'โครงสร้าง', stock: 6, minStock: 2, price: 500, cost: 300 }
+        ];
+
+        const defaultJobs = [
+            {
+                id: 'JOB-69001',
+                date: '2026-10-25',
+                customer: 'คุณวิภาวรรณ แสงจันทร์',
+                phone: '081-456-7890',
+                address: '123/4 ถ.เพชรเกษม หาดใหญ่ สงขลา',
+                model: 'LG WF-T1207 (12 Kg)',
+                symptom: 'น้ำไม่เข้าถังซัก มีเสียงฮัม',
+                status: 'ซ่อมเสร็จสิ้น',
+                technician: 'ช่างสมศักดิ์ รักงาน',
+                parts: [{ partId: 'P-002', qty: 1 }],
+                laborCost: 350,
+                remarks: 'เปลี่ยนวาล์วน้ำเข้าใหม่ ทดสอบระบบเรียบร้อย'
+            },
+            {
+                id: 'JOB-69002',
+                date: '2026-10-26',
+                customer: 'คุณกิตติศักดิ์ มั่นคง',
+                phone: '089-789-1234',
+                address: '45/8 ถ.สามชัย หาดใหญ่',
+                model: 'Samsung WA13N',
+                symptom: 'ปั่นหมาดไม่ยอมหมุน สายพานขาด',
+                status: 'รออะไหล่',
+                technician: 'ช่างประเสริฐ ฝีมือดี',
+                parts: [{ partId: 'P-001', qty: 1 }],
+                laborCost: 300,
+                remarks: 'รออะไหล่สายพานล็อตใหม่ส่งมอบ'
+            }
+        ];
+
+        // State variables
+        let technicians = JSON.parse(localStorage.getItem('hss_technicians')) || defaultTechnicians;
+        let inventory = JSON.parse(localStorage.getItem('hss_inventory')) || defaultInventory;
+        let jobs = JSON.parse(localStorage.getItem('hss_jobs')) || defaultJobs;
+
+        // Initialize app on load
+        window.onload = function() {
+            updateCurrentDate();
+            renderDashboard();
+            renderJobsTable();
+            renderInventoryTable();
+            renderTechniciansGrid();
+            populateDropdowns();
+            addPartRow();
+        };
+
+        function saveData() {
+            localStorage.setItem('hss_technicians', JSON.stringify(technicians));
+            localStorage.setItem('hss_inventory', JSON.stringify(inventory));
+            localStorage.setItem('hss_jobs', JSON.stringify(jobs));
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast-box');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+            
+            msgEl.textContent = message;
+            if (type === 'success') {
+                iconEl.className = 'fa-solid fa-circle-check text-emerald-400 text-lg';
+            } else {
+                iconEl.className = 'fa-solid fa-triangle-exclamation text-amber-400 text-lg';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function updateCurrentDate() {
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            const now = new Date().toLocaleDateString('th-TH', options);
+            document.getElementById('current-date').textContent = now;
+        }
+
+        // Tab Switching
+        function switchTab(tabId) {
+            ['dashboard', 'jobs', 'inventory', 'technicians'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).classList.remove('border-blue-700', 'text-blue-700');
+                document.getElementById(`tab-${t}`).classList.add('border-transparent', 'text-slate-600');
+            });
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).classList.add('border-blue-700', 'text-blue-700');
+            document.getElementById(`tab-${tabId}`).classList.remove('border-transparent', 'text-slate-600');
+
+            if(tabId === 'dashboard') renderDashboard();
+            if(tabId === 'jobs') renderJobsTable();
+            if(tabId === 'inventory') renderInventoryTable();
+            if(tabId === 'technicians') renderTechniciansGrid();
+        }
+
+        // Populate Select Dropdowns
+        function populateDropdowns() {
+            const techSelect = document.getElementById('job-technician');
+            const filterTechSelect = document.getElementById('filter-technician');
+            
+            techSelect.innerHTML = '';
+            filterTechSelect.innerHTML = '<option value="">ช่างทั้งหมด</option>';
+
+            technicians.forEach(tech => {
+                techSelect.innerHTML += `<option value="${tech.name}">${tech.name}</option>`;
+                filterTechSelect.innerHTML += `<option value="${tech.name}">${tech.name}</option>`;
+            });
+        }
+
+        // Render Dashboard
+        function renderDashboard() {
+            const totalJobs = jobs.length;
+            const pendingJobs = jobs.filter(j => j.status === 'รอดำเนินการ').jobs || jobs.filter(j => j.status === 'รอดำเนินการ').length;
+            const repairingJobs = jobs.filter(j => j.status === 'กำลังตรวจเช็ค' || j.status === 'รออะไหล่').length;
+            const completedJobs = jobs.filter(j => j.status === 'ซ่อมเสร็จสิ้น').length;
+            const lowStockCount = inventory.filter(p => p.stock <= p.minStock).length;
+
+            document.getElementById('stat-total-jobs').textContent = totalJobs;
+            document.getElementById('stat-pending-jobs').textContent = pendingJobs;
+            document.getElementById('stat-repairing-jobs').textContent = repairingJobs;
+            document.getElementById('stat-completed-jobs').textContent = completedJobs;
+            document.getElementById('stat-low-stock').textContent = lowStockCount;
+
+            // Recent Jobs Table in Dashboard
+            const recentContainer = document.getElementById('dashboard-recent-jobs');
+            recentContainer.innerHTML = '';
+            jobs.slice(-5).reverse().forEach(job => {
+                recentContainer.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 font-medium text-blue-900">${job.id}</td>
+                        <td class="p-3">
+                            <div class="font-medium">${job.customer}</div>
+                            <div class="text-xs text-slate-500">${job.model}</div>
+                        </td>
+                        <td class="p-3">${getStatusBadge(job.status)}</td>
+                        <td class="p-3 text-slate-600">${job.technician}</td>
+                    </tr>
+                `;
+            });
+
+            // Technician Performance Stats
+            const techStatsContainer = document.getElementById('dashboard-tech-stats');
+            techStatsContainer.innerHTML = '';
+            technicians.forEach(tech => {
+                const closedCount = jobs.filter(j => j.technician === tech.name && j.status === 'ซ่อมเสร็จสิ้น').length;
+                const totalAssigned = jobs.filter(j => j.technician === tech.name).length;
+                techStatsContainer.innerHTML += `
+                    <div class="p-4 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-slate-800">${tech.name}</div>
+                            <div class="text-xs text-slate-500">${tech.specialty} (${tech.phone})</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-emerald-600">${closedCount} งาน</div>
+                            <div class="text-xs text-slate-400">จากทั้งหมด ${totalAssigned} งาน</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function getStatusBadge(status) {
+            let colors = 'bg-slate-100 text-slate-700';
+            if (status === 'รอดำเนินการ') colors = 'bg-amber-100 text-amber-700';
+            else if (status === 'กำลังตรวจเช็ค') colors = 'bg-blue-100 text-blue-700';
+            else if (status === 'รออะไหล่') colors = 'bg-orange-100 text-orange-700';
+            else if (status === 'ซ่อมเสร็จสิ้น') colors = 'bg-emerald-100 text-emerald-700';
+            else if (status === 'ยกเลิก') colors = 'bg-rose-100 text-rose-700';
+            return `<span class="px-2.5 py-1 rounded-full text-xs font-semibold ${colors}">${status}</span>`;
+        }
+
+        // Jobs Management
+        function renderJobsTable() {
+            const search = document.getElementById('job-search').value.toLowerCase();
+            const statusFilter = document.getElementById('filter-status').value;
+            const techFilter = document.getElementById('filter-technician').value;
+
+            const tbody = document.getElementById('jobs-table-body');
+            tbody.innerHTML = '';
+
+            const filtered = jobs.filter(job => {
+                const matchSearch = job.customer.toLowerCase().includes(search) || job.phone.includes(search) || job.model.toLowerCase().includes(search) || job.symptom.toLowerCase().includes(search) || job.id.toLowerCase().includes(search);
+                const matchStatus = statusFilter === '' || job.status === statusFilter;
+                const matchTech = techFilter === '' || job.technician === techFilter;
+                return matchSearch && matchStatus && matchTech;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-6 text-slate-400">ไม่พบข้อมูลงานซ่อม</td></tr>`;
+                return;
+            }
+
+            filtered.slice().reverse().forEach(job => {
+                let partsCost = 0;
+                if (job.parts) {
+                    job.parts.forEach(p => {
+                        const item = inventory.find(i => i.id === p.partId);
+                        if (item) partsCost += item.price * p.qty;
+                    });
+                }
+                const grandTotal = partsCost + (parseFloat(job.laborCost) || 0);
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="p-4">
+                            <div class="font-bold text-blue-900">${job.id}</div>
+                            <div class="text-xs text-slate-400">${job.date}</div>
+                        </td>
+                        <td class="p-4">
+                            <div class="font-semibold text-slate-800">${job.customer}</div>
+                            <div class="text-xs text-slate-500"><i class="fa-solid fa-phone"></i> ${job.phone}</div>
+                        </td>
+                        <td class="p-4">
+                            <div class="font-medium text-slate-700">${job.model}</div>
+                            <div class="text-xs text-slate-500 truncate max-w-xs">${job.symptom}</div>
+                        </td>
+                        <td class="p-4 text-slate-700 font-medium">${job.technician}</td>
+                        <td class="p-4 font-semibold text-blue-900">${grandTotal.toLocaleString()} ฿</td>
+                        <td class="p-4">${getStatusBadge(job.status)}</td>
+                        <td class="p-4 text-right space-x-1">
+                            <button onclick="openPrintModal('${job.id}')" class="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition" title="พิมพ์ใบส่งซ่อม"><i class="fa-solid fa-print"></i></button>
+                            <button onclick="editJob('${job.id}')" class="p-2 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-lg transition" title="แก้ไขงานซ่อม"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deleteJob('${job.id}')" class="p-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition" title="ลบงานซ่อม"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Dynamic Part Rows inside Job Modal
+        function addPartRow(selectedPartId = '', selectedQty = 1) {
+            const container = document.getElementById('job-parts-container');
+            const rowId = 'part-row-' + Math.random().toString(36).substring(2, 9);
+            
+            let options = '<option value="">-- เลือกอะไหล่จากคลัง --</option>';
+            inventory.forEach(inv => {
+                const selected = inv.id === selectedPartId ? 'selected' : '';
+                options += `<option value="${inv.id}" ${selected}>${inv.code} - ${inv.name} (คงเหลือ: ${inv.stock}, ราคา: ${inv.price}฿)</option>`;
+            });
+
+            const html = `
+                <div id="${rowId}" class="flex gap-2 items-center">
+                    <select class="job-part-select flex-1 p-2 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-blue-600" onchange="calculateJobTotal()">
+                        ${options}
+                    </select>
+                    <input type="number" value="${selectedQty}" min="1" class="job-part-qty w-20 p-2 rounded-xl border border-slate-200 text-sm text-center focus:outline-none focus:border-blue-600" oninput="calculateJobTotal()" placeholder="จำนวน">
+                    <button type="button" onclick="document.getElementById('${rowId}').remove(); calculateJobTotal();" class="p-2 text-rose-500 hover:bg-rose-50 rounded-xl"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function calculateJobTotal() {
+            let partsTotal = 0;
+            const rows = document.querySelectorAll('#job-parts-container > div');
+            rows.forEach(row => {
+                const partId = row.querySelector('.job-part-select').value;
+                const qty = parseInt(row.querySelector('.job-part-qty').value) || 0;
+                const part = inventory.find(i => i.id === partId);
+                if (part) {
+                    partsTotal += part.price * qty;
+                }
+            });
+            const laborCost = parseFloat(document.getElementById('job-labor-cost').value) || 0;
+            const grandTotal = partsTotal + laborCost;
+            document.getElementById('job-total-display').textContent = grandTotal.toLocaleString() + ' บาท';
+        }
+
+        function openJobModal(jobId = null) {
+            document.getElementById('job-modal').classList.remove('hidden');
+            document.getElementById('job-parts-container').innerHTML = '';
+            
+            if (jobId) {
+                document.getElementById('job-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> แก้ไขงานซ่อม';
+                const job = jobs.find(j => j.id === jobId);
+                if (job) {
+                    document.getElementById('edit-job-id').value = job.id;
+                    document.getElementById('job-customer').value = job.customer;
+                    document.getElementById('job-phone').value = job.phone;
+                    document.getElementById('job-address').value = job.address || '';
+                    document.getElementById('job-model').value = job.model;
+                    document.getElementById('job-status').value = job.status;
+                    document.getElementById('job-technician').value = job.technician;
+                    document.getElementById('job-symptom').value = job.symptom;
+                    document.getElementById('job-labor-cost').value = job.laborCost;
+                    document.getElementById('job-remarks').value = job.remarks || '';
+
+                    if (job.parts && job.parts.length > 0) {
+                        job.parts.forEach(p => addPartRow(p.partId, p.qty));
+                    } else {
+                        addPartRow();
+                    }
+                }
+            } else {
+                document.getElementById('job-modal-title').innerHTML = '<i class="fa-solid fa-screwdriver-wrench"></i> บันทึกงานซ่อมใหม่';
+                document.getElementById('edit-job-id').value = '';
+                document.getElementById('job-customer').value = '';
+                document.getElementById('job-phone').value = '';
+                document.getElementById('job-address').value = '';
+                document.getElementById('job-model').value = '';
+                document.getElementById('job-status').value = 'รอดำเนินการ';
+                document.getElementById('job-symptom').value = '';
+                document.getElementById('job-labor-cost').value = '300';
+                document.getElementById('job-remarks').value = '';
+                addPartRow();
+            }
+            calculateJobTotal();
+        }
+
+        function closeJobModal() {
+            document.getElementById('job-modal').classList.add('hidden');
+        }
+
+        function saveJob() {
+            const editId = document.getElementById('edit-job-id').value;
+            const customer = document.getElementById('job-customer').value.trim();
+            const phone = document.getElementById('job-phone').value.trim();
+            const model = document.getElementById('job-model').value.trim();
+            const symptom = document.getElementById('job-symptom').value.trim();
+
+            if (!customer || !phone || !model || !symptom) {
+                showToast('กรุณากรอกข้อมูลสำคัญให้ครบถ้วน (ลูกค้า, เบอร์โทร, รุ่น, อาการเสีย)', 'error');
+                return;
+            }
+
+            // Gather parts
+            const parts = [];
+            const rows = document.querySelectorAll('#job-parts-container > div');
+            rows.forEach(row => {
+                const partId = row.querySelector('.job-part-select').value;
+                const qty = parseInt(row.querySelector('.job-part-qty').value) || 0;
+                if (partId && qty > 0) {
+                    parts.push({ partId, qty });
+                    // Auto stock deduction if completed or active
+                    const invItem = inventory.find(i => i.id === partId);
+                    if (invItem && !editId) {
+                        invItem.stock = Math.max(0, invItem.stock - qty);
+                    }
+                }
+            });
+
+            const jobData = {
+                id: editId || ('JOB-' + new Date().getFullYear().toString().substr(-2) + String(Math.floor(10000 + Math.random() * 90000))),
+                date: editId ? jobs.find(j => j.id === editId).date : new Date().toISOString().split('T')[0],
+                customer,
+                phone,
+                address: document.getElementById('job-address').value,
+                model,
+                symptom,
+                status: document.getElementById('job-status').value,
+                technician: document.getElementById('job-technician').value,
+                parts,
+                laborCost: parseFloat(document.getElementById('job-labor-cost').value) || 0,
+                remarks: document.getElementById('job-remarks').value
+            };
+
+            if (editId) {
+                const index = jobs.findIndex(j => j.id === editId);
+                if (index !== -1) jobs[index] = jobData;
+                showToast('แก้ไขข้อมูลงานซ่อมสำเร็จ');
+            } else {
+                jobs.push(jobData);
+                showToast('บันทึกงานซ่อมใหม่สำเร็จ');
+            }
+
+            saveData();
+            closeJobModal();
+            renderDashboard();
+            renderJobsTable();
+            renderInventoryTable();
+        }
+
+        function deleteJob(jobId) {
+            if (confirm('คุณต้องการลบใบงานซ่อม ' + jobId + ' ใช่หรือไม่?')) {
+                jobs = jobs.filter(j => j.id !== jobId);
+                saveData();
+                renderDashboard();
+                renderJobsTable();
+                showToast('ลบใบงานซ่อมสำเร็จ');
+            }
+        }
+
+        // Print Job Sheet
+        function openPrintModal(jobId) {
+            const job = jobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            document.getElementById('print-job-no').textContent = 'เลขที่: ' + job.id;
+            document.getElementById('print-date').textContent = 'วันที่: ' + job.date;
+            document.getElementById('print-customer').textContent = job.customer;
+            document.getElementById('print-phone').textContent = job.phone;
+            document.getElementById('print-address').textContent = job.address || '-';
+            document.getElementById('print-model').textContent = job.model;
+            document.getElementById('print-symptom').textContent = job.symptom;
+            document.getElementById('print-technician').textContent = job.technician;
+            document.getElementById('print-status').textContent = job.status;
+            document.getElementById('print-remarks').textContent = job.remarks || '-';
+            document.getElementById('print-labor').textContent = (job.laborCost || 0).toLocaleString() + ' ฿';
+
+            const tbody = document.getElementById('print-parts-table');
+            tbody.innerHTML = '';
+            let partsTotal = 0;
+
+            if (job.parts && job.parts.length > 0) {
+                job.parts.forEach((p, index) => {
+                    const inv = inventory.find(i => i.id === p.partId);
+                    const name = inv ? `${inv.code} - ${inv.name}` : 'อะไหล่ทั่วไป';
+                    const price = inv ? inv.price : 0;
+                    const total = price * p.qty;
+                    partsTotal += total;
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="border border-slate-300 p-2 text-center">${index + 1}</td>
+                            <td class="border border-slate-300 p-2">${name}</td>
+                            <td class="border border-slate-300 p-2 text-center">${p.qty}</td>
+                            <td class="border border-slate-300 p-2 text-right">${price.toLocaleString()}</td>
+                            <td class="border border-slate-300 p-2 text-right">${total.toLocaleString()}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" class="border border-slate-300 p-2 text-center text-slate-400">ไม่มีรายการเบิกอะไหล่</td></tr>`;
+            }
+
+            const grandTotal = partsTotal + (parseFloat(job.laborCost) || 0);
+            document.getElementById('print-grand-total').textContent = grandTotal.toLocaleString() + ' ฿';
+
+            document.getElementById('print-modal').classList.remove('hidden');
+        }
+
+        function closePrintModal() {
+            document.getElementById('print-modal').classList.add('hidden');
+        }
+
+        // Inventory Management
+        function renderInventoryTable() {
+            const search = document.getElementById('part-search').value.toLowerCase();
+            const lowStockOnly = document.getElementById('filter-low-stock').checked;
+            const tbody = document.getElementById('inventory-table-body');
+            tbody.innerHTML = '';
+
+            const filtered = inventory.filter(inv => {
+                const matchSearch = inv.code.toLowerCase().includes(search) || inv.name.toLowerCase().includes(search) || inv.category.toLowerCase().includes(search);
+                const matchLowStock = !lowStockOnly || inv.stock <= inv.minStock;
+                return matchSearch && matchLowStock;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center p-6 text-slate-400">ไม่พบรายการอะไหล่</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(inv => {
+                const isLow = inv.stock <= inv.minStock;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="p-4">
+                            <div class="font-bold text-blue-900">${inv.code}</div>
+                            <div class="text-xs text-slate-500">${inv.category || 'ทั่วไป'}</div>
+                        </td>
+                        <td class="p-4 font-medium text-slate-800">${inv.name}</td>
+                        <td class="p-4 font-semibold text-emerald-600">${inv.price.toLocaleString()} ฿</td>
+                        <td class="p-4 text-slate-600">${inv.cost ? inv.cost.toLocaleString() + ' ฿' : '-'}</td>
+                        <td class="p-4 text-center">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold ${isLow ? 'bg-rose-100 text-rose-700 animate-pulse' : 'bg-slate-100 text-slate-800'}">
+                                ${inv.stock} ชิ้น ${isLow ? '<i class="fa-solid fa-triangle-exclamation"></i>' : ''}
+                            </span>
+                        </td>
+                        <td class="p-4 text-right space-x-1">
+                            <button onclick="adjustStock('${inv.id}', 1)" class="px-2 py-1 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded text-xs font-bold" title="เพิ่มสต็อก +1">+1</button>
+                            <button onclick="adjustStock('${inv.id}', -1)" class="px-2 py-1 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded text-xs font-bold" title="ลดสต็อก -1">-1</button>
+                            <button onclick="openPartModal('${inv.id}')" class="p-2 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-lg transition" title="แก้ไขอะไหล่"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deletePart('${inv.id}')" class="p-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition" title="ลบอะไหล่"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function adjustStock(partId, amount) {
+            const part = inventory.find(i => i.id === partId);
+            if (part) {
+                part.stock = Math.max(0, part.stock + amount);
+                saveData();
+                renderInventoryTable();
+                renderDashboard();
+                showToast(`ปรับสต็อก ${part.name} เป็น ${part.stock} ชิ้น`);
+            }
+        }
+
+        function openPartModal(partId = null) {
+            document.getElementById('part-modal').classList.remove('hidden');
+            if (partId) {
+                document.getElementById('part-modal-title').innerHTML = '<i class="fa-solid fa-box"></i> แก้ไขข้อมูลอะไหล่';
+                const part = inventory.find(i => i.id === partId);
+                if (part) {
+                    document.getElementById('edit-part-id').value = part.id;
+                    document.getElementById('part-code').value = part.code;
+                    document.getElementById('part-name').value = part.name;
+                    document.getElementById('part-category').value = part.category || '';
+                    document.getElementById('part-stock').value = part.stock;
+                    document.getElementById('part-price').value = part.price;
+                    document.getElementById('part-cost').value = part.cost || 0;
+                    document.getElementById('part-min-stock').value = part.minStock || 3;
+                }
+            } else {
+                document.getElementById('part-modal-title').innerHTML = '<i class="fa-solid fa-box"></i> เพิ่มอะไหล่ใหม่';
+                document.getElementById('edit-part-id').value = '';
+                document.getElementById('part-code').value = 'P-' + String(Math.floor(100 + Math.random() * 900));
+                document.getElementById('part-name').value = '';
+                document.getElementById('part-category').value = '';
+                document.getElementById('part-stock').value = '10';
+                document.getElementById('part-price').value = '250';
+                document.getElementById('part-cost').value = '150';
+                document.getElementById('part-min-stock').value = '3';
+            }
+        }
+
+        function closePartModal() {
+            document.getElementById('part-modal').classList.add('hidden');
+        }
+
+        function savePart() {
+            const editId = document.getElementById('edit-part-id').value;
+            const code = document.getElementById('part-code').value.trim();
+            const name = document.getElementById('part-name').value.trim();
+            const stock = parseInt(document.getElementById('part-stock').value) || 0;
+            const price = parseFloat(document.getElementById('part-price').value) || 0;
+
+            if (!code || !name) {
+                showToast('กรุณากรอกรหัสและชื่ออะไหล่', 'error');
+                return;
+            }
+
+            const partData = {
+                id: editId || ('P-' + Math.random().toString(36).substring(2, 9)),
+                code,
+                name,
+                category: document.getElementById('part-category').value,
+                stock,
+                price,
+                cost: parseFloat(document.getElementById('part-cost').value) || 0,
+                minStock: parseInt(document.getElementById('part-min-stock').value) || 3
+            };
+
+            if (editId) {
+                const index = inventory.findIndex(i => i.id === editId);
+                if (index !== -1) inventory[index] = partData;
+                showToast('แก้ไขข้อมูลอะไหล่สำเร็จ');
+            } else {
+                inventory.push(partData);
+                showToast('เพิ่มอะไหล่ใหม่สำเร็จ');
+            }
+
+            saveData();
+            closePartModal();
+            renderInventoryTable();
+            renderDashboard();
+        }
+
+        function deletePart(partId) {
+            if (confirm('คุณต้องการลบอะไหล่นี้ออกจากคลังใช่หรือไม่?')) {
+                inventory = inventory.filter(i => i.id !== partId);
+                saveData();
+                renderInventoryTable();
+                renderDashboard();
+                showToast('ลบอะไหล่สำเร็จ');
+            }
+        }
+
+        // Technicians Management
+        function renderTechniciansGrid() {
+            const grid = document.getElementById('technicians-grid');
+            grid.innerHTML = '';
+
+            technicians.forEach(tech => {
+                const closedCount = jobs.filter(j => j.technician === tech.name && j.status === 'ซ่อมเสร็จสิ้น').length;
+                const activeCount = jobs.filter(j => j.technician === tech.name && j.status !== 'ซ่อมเสร็จสิ้น' && j.status !== 'ยกเลิก').length;
+
+                grid.innerHTML += `
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center space-x-3 mb-4">
+                                <div class="w-12 h-12 bg-blue-100 text-blue-800 rounded-2xl flex items-center justify-center font-bold text-lg">
+                                    ${tech.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-lg">${tech.name}</h3>
+                                    <p class="text-xs text-blue-600 font-medium">${tech.specialty || 'ช่างเทคนิค'}</p>
+                                </div>
+                            </div>
+                            <div class="space-y-2 text-sm text-slate-600 mb-4">
+                                <p><i class="fa-solid fa-phone text-slate-400"></i> ${tech.phone}</p>
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-100 pt-4 flex justify-between items-center text-xs">
+                            <span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg font-semibold">กำลังซ่อม: ${activeCount} งาน</span>
+                            <span class="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg font-semibold">ซ่อมเสร็จ: ${closedCount} งาน</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openTechnicianModal() {
+            document.getElementById('technician-modal').classList.remove('hidden');
+            document.getElementById('tech-name').value = '';
+            document.getElementById('tech-phone').value = '';
+            document.getElementById('tech-specialty').value = '';
+        }
+
+        function closeTechnicianModal() {
+            document.getElementById('technician-modal').classList.add('hidden');
+        }
+
+        function saveTechnician() {
+            const name = document.getElementById('tech-name').value.trim();
+            const phone = document.getElementById('tech-phone').value.trim();
+            if (!name || !phone) {
+                showToast('กรุณากรอกชื่อและเบอร์โทรศัพท์ช่าง', 'error');
+                return;
+            }
+
+            const newTech = {
+                id: 'TECH-' + Math.random().toString(36).substring(2, 9),
+                name,
+                phone,
+                specialty: document.getElementById('tech-specialty').value
+            };
+
+            technicians.push(newTech);
+            saveData();
+            closeTechnicianModal();
+            populateDropdowns();
+            renderTechniciansGrid();
+            renderDashboard();
+            showToast('เพิ่มช่างเทคนิคใหม่สำเร็จ');
+        }
+
+        // Reset Data Modal
+        function resetDataModal() {
+            if (confirm('คุณต้องการรีเซ็ตข้อมูลทั้งหมดกลับเป็นค่าเริ่มต้น (Demo Data) ใช่หรือไม่?')) {
+                localStorage.removeItem('hss_technicians');
+                localStorage.removeItem('hss_inventory');
+                localStorage.removeItem('hss_jobs');
+                technicians = defaultTechnicians;
+                inventory = defaultInventory;
+                jobs = defaultJobs;
+                renderDashboard();
+                renderJobsTable();
+                renderInventoryTable();
+                renderTechniciansGrid();
+                populateDropdowns();
+                showToast('รีเซ็ตข้อมูลเป็นค่าเริ่มต้นเรียบร้อยแล้ว');
+            }
+        }
+    </script>
+</body>
+</html>
